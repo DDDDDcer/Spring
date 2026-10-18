@@ -2,6 +2,7 @@ package spring;
 
 import service.Test;
 
+import java.beans.Introspector;
 import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
@@ -35,12 +36,16 @@ public class ApplicationContext {
 
                         String className = fileName.substring(fileName.indexOf("service"), fileName.indexOf(".class"));
                         className=className.replace("/", ".");
-                        System.out.println(className);
                         try {
                             Class<?> clazz = classLoader.loadClass(className);
                             if (clazz.isAnnotationPresent(Component.class)) {
 
                                 String name = clazz.getAnnotation(Component.class).value();
+                                //为Component注解为空时配置默认值
+                                if(name.equals("")) {
+                                    name = Introspector.decapitalize(clazz.getSimpleName());
+                                }
+
                                 BeanDefinition beanDefinition = new BeanDefinition();
                                 beanDefinition.setType(clazz);
 
