@@ -94,7 +94,10 @@ public class ApplicationContext {
                 ((BeanNameAware) instance).setBeanName(beanName);
             }
 
-
+            //初始化
+            if(instance instanceof InitializingBean) {
+                ((InitializingBean) instance).afterPropertiesSet();
+            }
 
 
             return instance;
