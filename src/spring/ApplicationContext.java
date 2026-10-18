@@ -41,7 +41,9 @@ public class ApplicationContext {
                             if (clazz.isAnnotationPresent(Component.class)) {
 
                                 String name = clazz.getAnnotation(Component.class).value();
-                                BeanDefinition beanDefinition = new  BeanDefinition();
+                                BeanDefinition beanDefinition = new BeanDefinition();
+                                beanDefinition.setType(clazz);
+
                                 if(clazz.isAnnotationPresent(Scope.class)) {
                                     beanDefinition.setScope(clazz.getAnnotation(Scope.class).value());
                                 }else{
