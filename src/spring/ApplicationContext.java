@@ -3,6 +3,7 @@ package spring;
 import service.Test;
 
 import java.io.File;
+import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -18,8 +19,8 @@ public class ApplicationContext {
 
         if(config.isAnnotationPresent(ComponentScan.class)) {
             ComponentScan componentScan = (ComponentScan) config.getAnnotation(ComponentScan.class);
-            String packageName = config.getPackageName();
 
+            String packageName = componentScan.value();
             packageName = packageName.replace(".", "/");
 
             ClassLoader classLoader = config.getClassLoader();
@@ -67,7 +68,14 @@ public class ApplicationContext {
         }
     }
     private Object createBean(String beanName,BeanDefinition beanDefinition) {
-        return null;
+        Class type = beanDefinition.getType();
+
+        try {
+            Object bean = type.getConstructor().newInstance();
+            return bean;
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     public Object getBean(String beanName) {
