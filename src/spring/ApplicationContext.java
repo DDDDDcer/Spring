@@ -80,15 +80,24 @@ public class ApplicationContext {
 
         try {
             //1.实例化
-            Object bean = type.getConstructor().newInstance();
+            Object instance = type.getConstructor().newInstance();
             //2.依赖注入
             for (Field f : type.getDeclaredFields()) {
                 if(f.isAnnotationPresent(Autowired.class)) {
                     f.setAccessible(true);
-                    f.set(bean, getBean(f.getName()));
+                    f.set(instance, getBean(f.getName()));
                 }
             }
-            return bean;
+
+            //Aware回调
+            if(instance instanceof BeanNameAware) {
+                ((BeanNameAware) instance).setBeanName(beanName);
+            }
+
+
+
+
+            return instance;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
         }
