@@ -7,8 +7,11 @@ import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ApplicationContext {
+
     private Class config;
     private ConcurrentHashMap<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
+    //单例池
+    private ConcurrentHashMap<String, Object> sigletonObjects = new ConcurrentHashMap<>();
 
     public ApplicationContext(Class config) {
         this.config = config;
@@ -53,9 +56,40 @@ public class ApplicationContext {
                 }
             }
         }
+
+        for (String beanName : beanDefinitionMap.keySet()) {
+            BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+            if (beanDefinition.getScope().equals("singleton")) {
+
+                Object bean = createBean(beanName, beanDefinition);
+                sigletonObjects.put(beanName, bean);
+            }
+        }
     }
-    public Object getBean(String beanName) {
+    private Object createBean(String beanName,BeanDefinition beanDefinition) {
         return null;
+    }
+
+    public Object getBean(String beanName) {
+        BeanDefinition beanDefinition = beanDefinitionMap.get(beanName);
+        if (beanDefinition != null) {
+            String scope = beanDefinition.getScope();
+            //单例
+            if (scope.equals("singleton")) {
+                Object bean = sigletonObjects.get(beanName);
+                if (bean == null) {
+                    Object o = createBean(beanName, beanDefinition);
+                    sigletonObjects.put(beanName, o);
+                    return  bean;
+                }
+                return bean;
+            }else{
+                return createBean(beanName, beanDefinition);
+            }
+        }else {
+            throw new NullPointerException();
+        }
+
     }
 
 }
