@@ -4,6 +4,7 @@ import service.Test;
 
 import java.beans.Introspector;
 import java.io.File;
+import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
 import java.util.concurrent.ConcurrentHashMap;
@@ -78,7 +79,15 @@ public class ApplicationContext {
         Class type = beanDefinition.getType();
 
         try {
+            //1.实例化
             Object bean = type.getConstructor().newInstance();
+            //2.依赖注入
+            for (Field f : type.getDeclaredFields()) {
+                if(f.isAnnotationPresent(Autowired.class)) {
+                    f.setAccessible(true);
+                    f.set(bean, getBean(f.getName()));
+                }
+            }
             return bean;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new RuntimeException(e);
