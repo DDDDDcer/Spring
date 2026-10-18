@@ -36,13 +36,14 @@ public class ApplicationContext {
                             Class<?> clazz = classLoader.loadClass(className);
                             if (clazz.isAnnotationPresent(Component.class)) {
 
+                                String name = clazz.getAnnotation(Component.class).value();
                                 BeanDefinition beanDefinition = new  BeanDefinition();
                                 if(clazz.isAnnotationPresent(Scope.class)) {
                                     beanDefinition.setScope(clazz.getAnnotation(Scope.class).value());
                                 }else{
                                     beanDefinition.setScope("singleton");
                                 }
-
+                                beanDefinitionMap.put(name, beanDefinition);
 
                             }
                         } catch (ClassNotFoundException e) {
