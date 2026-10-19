@@ -94,6 +94,7 @@ public class ApplicationContext {
         try {
             //1.实例化
             Object instance = type.getConstructor().newInstance();
+
             //2.依赖注入
             for (Field f : type.getDeclaredFields()) {
                 if(f.isAnnotationPresent(Autowired.class)) {
@@ -109,7 +110,7 @@ public class ApplicationContext {
 
             //初始化前处理bean
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
-                beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+                instance = beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
             }
 
             //初始化
@@ -119,7 +120,7 @@ public class ApplicationContext {
 
             //初始化后处理bean
             for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
-                beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+                instance = beanPostProcessor.postProcessAfterInitialization(instance, beanName);
             }
 
             //BeanPostProcessor 初始化后 AOP

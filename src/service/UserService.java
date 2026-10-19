@@ -3,7 +3,7 @@ package service;
 import spring.*;
 
 @Component("userService")
-public class UserService implements BeanNameAware , InitializingBean {
+public class UserService implements UserInterface, BeanNameAware , InitializingBean {
 
     @Autowired
     private OrderService orderService;
@@ -16,6 +16,7 @@ public class UserService implements BeanNameAware , InitializingBean {
         BeanName = beanName;
     }
 
+    @Override
     public void test(){
         System.out.println(orderService);
     }
