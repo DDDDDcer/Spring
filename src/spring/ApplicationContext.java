@@ -7,6 +7,7 @@ import java.io.File;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ApplicationContext {
@@ -15,6 +16,7 @@ public class ApplicationContext {
     private ConcurrentHashMap<String, BeanDefinition> beanDefinitionMap = new ConcurrentHashMap<>();
     //单例池
     private ConcurrentHashMap<String, Object> sigletonObjects = new ConcurrentHashMap<>();
+    private ArrayList<BeanPostProcessor> beanPostProcessorList = new ArrayList<>();
 
     public ApplicationContext(Class config) {
         this.config = config;
@@ -37,9 +39,16 @@ public class ApplicationContext {
 
                         String className = fileName.substring(fileName.indexOf("service"), fileName.indexOf(".class"));
                         className=className.replace("/", ".");
+
                         try {
                             Class<?> clazz = classLoader.loadClass(className);
                             if (clazz.isAnnotationPresent(Component.class)) {
+
+                                //判断类是否实现了BeanPostProcessor接口,如果实现了这个接口将类放入处理列表中
+                                if (BeanPostProcessor.class.isAssignableFrom(clazz)) {
+                                    BeanPostProcessor instance = (BeanPostProcessor) clazz.newInstance();
+                                    beanPostProcessorList.add(instance);
+                                }
 
                                 String name = clazz.getAnnotation(Component.class).value();
                                 //为Component注解为空时配置默认值
@@ -58,7 +67,7 @@ public class ApplicationContext {
                                 beanDefinitionMap.put(name, beanDefinition);
 
                             }
-                        } catch (ClassNotFoundException e) {
+                        } catch (ClassNotFoundException | IllegalAccessException | InstantiationException e) {
                             throw new RuntimeException(e);
                         }
                     }
@@ -75,6 +84,10 @@ public class ApplicationContext {
             }
         }
     }
+
+    /*
+    创建bean
+     */
     private Object createBean(String beanName,BeanDefinition beanDefinition) {
         Class type = beanDefinition.getType();
 
@@ -94,10 +107,22 @@ public class ApplicationContext {
                 ((BeanNameAware) instance).setBeanName(beanName);
             }
 
+            //初始化前处理bean
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                beanPostProcessor.postProcessBeforeInitialization(instance, beanName);
+            }
+
             //初始化
             if(instance instanceof InitializingBean) {
                 ((InitializingBean) instance).afterPropertiesSet();
             }
+
+            //初始化后处理bean
+            for (BeanPostProcessor beanPostProcessor : beanPostProcessorList) {
+                beanPostProcessor.postProcessAfterInitialization(instance, beanName);
+            }
+
+            //BeanPostProcessor 初始化后 AOP
 
 
             return instance;
